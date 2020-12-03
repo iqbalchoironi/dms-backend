@@ -46,10 +46,13 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.STRING,
             allowNull: false,
         },
-        tgl_spm: DataTypes.DATE,
-        is_active: DataTypes.STRING,
-        a_group: DataTypes.STRING,
-        group_id: DataTypes.STRING,
+        tgl_spm: {
+            type: DataTypes.DATETIME,
+        },
+        is_active:{
+            type: DataTypes.BOOLEAN,
+            defaltValue:1
+        },
     }, 
     {
         //   createdAt: 'CreatedDate',
