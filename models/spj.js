@@ -42,7 +42,10 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.STRING,
             allowNull: false,
         },
-        is_active: DataTypes.STRING,
+        is_active: {
+            type: DataTypes.STRING,
+            defaultValue: 1
+        },
         a_group: DataTypes.STRING,
         group_id: DataTypes.STRING,
     }, 

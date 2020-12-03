@@ -1,7 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const {readSPJ} = require('../controllers/spj_controller');
+const { read, create, update, remove } = require('../controllers/spj_controller');
 
-router.get('/spj', readSPJ);
+router.get('/spjs', read);
+router.post('/spj', create);
+router.put('/spj/:id', update);
+router.delete('/spj/:id', remove);
 
 module.exports = router;
