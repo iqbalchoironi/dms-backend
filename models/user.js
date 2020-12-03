@@ -8,6 +8,7 @@ module.exports = (sequelize, DataTypes) => {
         username: {
             type: DataTypes.STRING,
             allowNull: false,
+            unique: true
         },
         name: {
             type: DataTypes.STRING,
@@ -19,8 +20,12 @@ module.exports = (sequelize, DataTypes) => {
         role_user_id: {
             type: DataTypes.INTEGER,
             allowNull: false,
+            defaultValue:2
         },
-        is_active: DataTypes.BOOLEAN,
+        is_active: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: 0
+        }
     }, 
     {
         createdAt: 'CreatedDate',
