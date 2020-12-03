@@ -1,5 +1,5 @@
 module.exports = (sequelize, DataTypes) => {
-    const Schema = sequelize.define('loc_activity', {
+    const Schema = sequelize.define('log_activity', {
         id: {
             primaryKey: true,
             type: DataTypes.STRING,
