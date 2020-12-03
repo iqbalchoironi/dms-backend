@@ -47,11 +47,11 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: false,
         },
         tgl_spm: {
-            type: DataTypes.DATETIME,
+            type: DataTypes.DATE,
         },
         is_active:{
             type: DataTypes.BOOLEAN,
-            defaltValue:1
+            defaultValue: 1
         },
     }, 
     {
