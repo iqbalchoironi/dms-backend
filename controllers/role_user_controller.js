@@ -1,4 +1,4 @@
-const Role = require('../models').role_Role;
+const Role = require('../models').role_user;
 
 module.exports = {
 
@@ -42,7 +42,7 @@ module.exports = {
             if (!valiableRole) {
                 return res.status(404).send('gak ada sob');
             }
-            
+
             await valiableRole.update(req.body);
             res.status(200).json(valiableRole);
 
