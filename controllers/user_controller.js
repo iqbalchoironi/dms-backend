@@ -43,18 +43,21 @@ module.exports = {
     },
 
     create: async(req, res) => {
-        let { username, password, name } = req.body;
-        const hashedPassword = hashPassword(password);
 
         try {
 
-            let valiableUser = await User.findOne({where:{ username: username}});
+            let valiableUser = await User.findOne({where:{ username: req.body.username}});
 
             if (valiableUser) {
                 return res.status(404).send('udah ada username lu sob');
             }
 
-            let newUser = await User.create({username, password: hashedPassword, name});
+            if (req.body.password) {
+                let hashedPassword = hashPassword(req.body.password);
+                req.body.password = hashedPassword;
+            }
+
+            let newUser = await User.create(req.body);
 
             if (newUser) {
                 res.status(200).json(newUser);
@@ -103,7 +106,7 @@ module.exports = {
             res.status(200).send('udah di delete');
 
         }catch(error) {
-
+            
         }
     }
 }
