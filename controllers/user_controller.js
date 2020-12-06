@@ -4,6 +4,7 @@ const {hashPassword,comparePassword, generateUserToken} = require('../helpers/au
 module.exports = {
     login: async(req, res) => {
 
+        console.log(req.body)
         let { username, password } = req.body;
 
         try {
