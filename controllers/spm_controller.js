@@ -135,10 +135,16 @@ module.exports = {
             }
     
             await valiableSpm.destroy();
-            res.status(200).send('udah di delete');
+            res.status(200).json({
+                success: true,
+                message: 'data berhasil di hapus'
+            })
 
         }catch(error) {
-            
+            res.status(200).json({
+                success: false,
+                message: 'maaf, terjadi kesalahan pada server'
+            })
         }
     }
 }
