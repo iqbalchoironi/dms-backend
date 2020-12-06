@@ -42,10 +42,18 @@ module.exports = {
         }
         
         try {
-            let data = await LogActivity.findAll(filter);
-            res.json(data);
+            let {count: total, rows: data} = await LogActivity.findAndCountAll(filter);
+            // let data = await LogActivity.findAll(filter);
+            res.status(200).json({
+                success: true,
+                total,
+                data
+            });
         } catch(error){
-            console.error(error);
+            res.status(200).json({
+                success: false,
+                message: 'maaf, terjadi kesalahan pada server'
+            })
         }
     },
 
