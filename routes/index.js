@@ -3,6 +3,8 @@ const spm_router = require('./spm_router');
 const user_router = require('./user_route');
 const role_user_router = require('./role_user_route');
 const category_router = require('./category_route');
+const logPhysicalDocument = require('./log_dokumen_fisik_route');
+const logAcivityRouter = require('./log_activity');
 
 module.exports = (server) => {
     server.use('/api/v1', spj_router);
@@ -10,4 +12,6 @@ module.exports = (server) => {
     server.use('/api/v1', user_router);
     server.use('/api/v1', role_user_router);
     server.use('/api/v1', category_router);
+    server.use('/api/v1', logPhysicalDocument);
+    server.use('/api/v1', logAcivityRouter);
 }
