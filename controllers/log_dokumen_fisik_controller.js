@@ -1,14 +1,67 @@
 const LogDocumentPhisic = require('../models').log_dok_fisik;
+const { Op } = require('sequelize');
 
 module.exports = {
 
     read: async(req, res) => {
 
+        const {
+            query : {
+                fk_dok_id, 
+                date_pinjam, 
+                date_hrs_kembali, 
+                date_kembali,
+                peminjam,
+                fk_user_id,
+                log_desc,
+                page,
+                limit,
+            }
+        } = req;
+
+        let filter = {
+            raw: false,
+            limit: parseInt(limit),
+            offset: parseInt(limit) * (parseInt(page) - 1),
+            order: [],
+            where: {},
+        };
+
+        if (fk_dok_id) {
+            filter.where.fk_dok_id = { [Op.like]: `%${fk_dok_id}%` };
+        }
+        if (date_pinjam) {
+            filter.where.date_pinjam = {  [Op.between]: [new Date(date_pinjam), new Date(date_pinjam).setHours(24,0,0)] };
+        }
+        if (date_hrs_kembali) {
+            filter.where.date_hrs_kembali = {  [Op.between]: [new Date(date_hrs_kembali), new Date(date_hrs_kembali).setHours(24,0,0)] };
+        }
+        if (date_kembali) {
+            filter.where.date_kembali = {  [Op.between]: [new Date(date_kembali), new Date(date_kembali).setHours(24,0,0)] };
+        }
+        if (peminjam) {
+            filter.where.peminjam = { [Op.like]: `%${peminjam}%` };
+        }
+        if (fk_user_id) {
+            filter.where.fk_user_id = { [Op.like]: `%${fk_user_id}%` };
+        }
+        if (log_desc) {
+            filter.where.log_desc = { [Op.like]: `%${log_desc}%` };
+        }
+
         try {
-            let data = await LogDocumentPhisic.findAll({limit:parseInt(req.query.limit)});
-            res.json(data);
+            let {count: total, rows: data} = await LogDocumentPhisic.findAndCountAll(filter);
+            // let data = await LogDocumentPhisic.findAll(filter);
+            res.status(200).json({
+                success: true,
+                total,
+                data
+            });
         } catch(error){
-            console.error(error);
+            res.status(200).json({
+                success: false,
+                message: 'maaf, terjadi kesalahan pada server'
+            })
         }
     },
 
