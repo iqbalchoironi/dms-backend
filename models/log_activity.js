@@ -22,7 +22,7 @@ module.exports = (sequelize, DataTypes) => {
         activity_desc: {
             type: DataTypes.STRING,
         },
-        activity_time: {
+        activity_times: {
             type: DataTypes.DATE,
             allowNull: false
         },

@@ -7,11 +7,11 @@ module.exports = {
 
         const {
             query : {
-                username: fk_username, 
+                fk_username, 
                 activity_type, 
-                object_type: activity_object, 
-                object_id: activity_object_detil,
-                activity_time: activity_times,
+                activity_object, 
+                activity_object_detil,
+                activity_times,
                 page,
                 limit,
             }
