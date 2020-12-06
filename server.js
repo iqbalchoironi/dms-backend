@@ -4,6 +4,9 @@ const server = express();
 const dotenv = require('dotenv');
 dotenv.config();
 
+const cors = require('cors');
+server.use(cors())
+
 server.use(express.json())
 server.use(express.urlencoded());
 
