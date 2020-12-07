@@ -1,5 +1,8 @@
 const Spm = require('../models').dok_spm;
+const DokFile = require('../models').dokumen_files;
 const { Op } = require('sequelize');
+const {sequelize} = require('../models')
+
 module.exports = {
     
     read: async(req, res) => {
@@ -77,6 +80,7 @@ module.exports = {
     },
 
     create: async(req, res) => {
+        console.log(req.body)
 
         try {
 
@@ -84,11 +88,44 @@ module.exports = {
             box = box[box.length - 1].substring(1)
             req.body.box = box;
 
-            let count = await Spm.count() + 1;
-            let dok_id = `SPM_${count}`;
-            req.body.dok_id = dok_id;
 
-            let newSpm = await Spm.create(req.body);
+            let newSpm = await sequelize.transaction(async (t) => {
+
+                // let newSpm  = await Spm.create(req.body,{
+                //     include: DokFile,
+                //     require: false
+                // });
+                const newSpm  = await Spm.create(req.body, { transaction: t });
+
+                if(req.file){
+                    let pathFile = `${process.env.STORAGE_DOCUMENT}/${req.body.fk_cat_id}/${req.body.dok_id}`;
+                    await DokFile.create({
+                        dokumen_path: pathFile,
+                        dokumen_id: req.body.dok_id,
+                        dokumen_name: req.file.filename,
+                        dokumen_size: req.file.size,
+                        dokumen_file_type: req.file.mimetype
+                    }, { transaction: t });
+
+                    // await DokFile.create({
+                    //     dokumen_path: pathFile,
+                    //     dokumen_id: req.body.dok_id,
+                    //     dokumen_name: req.file.filename,
+                    //     dokumen_size: req.file.size,
+                    //     dokumen_file_type: req.file.mimetype
+                    // });
+                }
+            
+                return newSpm;
+            
+            });
+
+            newSpm  = await Spm.findOne({
+                include: DokFile,
+                where: {
+                    dok_id: req.body.dok_id,
+                },
+            });
 
             if (newSpm) {
                 res.status(200).json(newSpm);
