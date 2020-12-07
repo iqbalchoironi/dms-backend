@@ -9,11 +9,11 @@ module.exports = (sequelize, DataTypes) => {
         },
         dok_header: {
             type: DataTypes.STRING,
-            allowNull: false,
+            // allowNull: false,
             },
         dok_desc: {
             type: DataTypes.TEXT,
-            allowNull: false,
+            // allowNull: false,
         },
         date_in: DataTypes.DATE,
         date_received: DataTypes.DATE,
@@ -60,6 +60,10 @@ module.exports = (sequelize, DataTypes) => {
         timestamps: false,
         freezeTableName: true,
     });
-    // Schema.associate = (models) => {};
+    Schema.associate = (models) => {
+        models.dok_spm.hasOne(models.dokumen_files, {
+            foreignKey: 'dokumen_id'
+        })
+    };
     return Schema;
 };
