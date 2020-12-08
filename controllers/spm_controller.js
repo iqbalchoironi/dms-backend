@@ -2,6 +2,9 @@ const Spm = require('../models').dok_spm;
 const DokFile = require('../models').dokumen_files;
 const { Op } = require('sequelize');
 const {sequelize} = require('../models')
+const setId = require('../helpers/setIdDocument');
+const xlsx = require('xlsx');
+let moment = require('moment')
 
 module.exports = {
     
@@ -134,6 +137,18 @@ module.exports = {
 
     update: async(req, res) => {
 
+        if (!Date.parse(req.body.date_in)) {
+            delete req.body.date_in;
+        }
+        if (!Date.parse(req.body.date_received)) {
+            delete req.body.date_received;
+        }
+        if (!Date.parse(req.body.date_retensi)) {
+            delete req.body.date_retensi;
+        }
+        if (!Date.parse(req.body.tgl_spm)) {
+            delete req.body.tgl_spm;
+        }
         try {
 
             let updateSpm = await sequelize.transaction(async (t) => {
@@ -147,7 +162,7 @@ module.exports = {
 
                 if (req.body.lokasi_fisik) {
                     let box = req.body.lokasi_fisik.split('.');
-                    box = box[box.length - 1].substring(1)
+                    box = box[box.length - 1];
                     req.body.box = box;
                 }
 
@@ -224,6 +239,78 @@ module.exports = {
 
         }catch(error) {
             res.status(200).json({
+                success: false,
+                message: 'maaf, terjadi kesalahan pada server'
+            })
+        }
+    },
+
+    exelToDB: async (req, res) => {
+
+        if (req.file == undefined) {
+            return res.status(400).send("Please upload an excel file!");
+        }
+
+        try {
+
+            let path = `${req.file.destination}/${req.file.filename}`
+
+            const workbook = xlsx.read(path, { type: 'file' });
+            const [firstSheetName] = workbook.SheetNames;
+            const worksheet = workbook.Sheets[firstSheetName];
+            const rows = await xlsx.utils.sheet_to_json(worksheet, {
+                header: 'A',
+                range: 0,
+                blankrows: false,
+                defval: null,
+                raw: true,
+            });
+
+            rows.shift();
+            rows.shift();
+            rows.shift();
+
+            let inputs = [];
+            let count = await Spm.count();
+            console.log(rows.length)
+            rows.forEach(async (row) => {
+                let box = row['A'].split('.');
+                    box = box[box.length - 1];
+                
+                count++;
+                let dokIdIndex = await setId(count);
+                
+                let input = {
+                    lokasi_fisik: row['A'],
+                    skpd        : row['B'],
+                    kepada      : row['C'],
+                    keperluan   : row['D'],
+                    no_spm      : row['E'],
+                    no_sp2d     : row['F'],
+                    tgl_spm     : new moment.utc(row['G'],'DD-MM-YYYY'),
+                    fk_cat_id   : 'spm',
+                    dok_id      : `SPM_${dokIdIndex}`,
+                    box         : box
+                };
+                inputs.push(input);
+            });
+                
+            let totalInputSpm = await sequelize.transaction(async (t) => {
+
+                let inputSpms = await Spm.bulkCreate(inputs,{ transaction: t });
+                return inputSpms
+            });
+
+                res.status(200).json({
+                    success: true,
+                    data: totalInputSpm
+                })
+            // });
+
+
+        }catch(error) {
+            console.log(error)
+            res.status(502).json({
                 success: false,
                 message: 'maaf, terjadi kesalahan pada server'
             })
