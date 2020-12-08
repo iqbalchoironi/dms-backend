@@ -7,28 +7,28 @@ const path = require('path');
 
 const documentStorage =  multer.diskStorage({
     destination: async function (req, file, cb) {
-        let count = req.body.fk_cat_id === 'spm' ? await Spm.count() + 1 : await Spj.count() + 1;
-        count = '' + count;
-        while (count.length < 8) {
-            count = '0' + count;
-        }
-        let dok_id = req.body.fk_cat_id === 'spm' ? `SPM_${count}` : `SPJ_${count}`;
-        req.body.dok_id = dok_id;
 
-        let destinationFolder = `${process.env.STORAGE_ROOT}${process.env.STORAGE_DOCUMENT}/${req.body.fk_cat_id}/${dok_id}`;
+        if(req.method === 'POST') {
+            let count = req.body.fk_cat_id === 'spm' ? await Spm.count() + 1 : await Spj.count() + 1;
+            count = '' + count;
+            while (count.length < 8) {
+                count = '0' + count;
+            }
+            let dok_id = req.body.fk_cat_id === 'spm' ? `SPM_${count}` : `SPJ_${count}`;
+            req.body.dok_id = dok_id;
+    
+        } else {
+            req.body.dok_id = req.params.id;
+        }
+
+        let destinationFolder = `${process.env.STORAGE_ROOT}${process.env.STORAGE_DOCUMENT}/${req.body.fk_cat_id}/${req.body.dok_id}`;
         fs.mkdirSync(destinationFolder, { recursive: true })
         cb(null, destinationFolder)
     },
     filename: async function (req, file, cb) {
-        let count = req.body.fk_cat_id === 'spm' ? await Spm.count() + 1 : await Spj.count() + 1;
-        count = '' + count;
-        while (count.length < 8) {
-            count = '0' + count;
-        }
-        let dok_id = req.body.fk_cat_id === 'spm' ? `SPM_${count}` : `SPJ_${count}`;
         let timestamp = new Date();
-        timestamp = timestamp.getDate() + "-" + (timestamp.getMonth() + 1) + "-" + timestamp.getFullYear()
-        let filename = timestamp +  '_'  + dok_id + '.' +file.originalname.split('.')[file.originalname.split('.').length -1];
+        timestamp = timestamp.getDate() + "-" + (timestamp.getMonth() + 1) + "-" + timestamp.getFullYear()+ "_" + timestamp.getHours()+ "." + timestamp.getMinutes()+ "." + timestamp.getSeconds();
+        let filename = timestamp +  '_'  + req.body.dok_id + '.' +file.originalname.split('.')[file.originalname.split('.').length -1];
         cb(null,filename);
     }
 })
