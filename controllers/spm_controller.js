@@ -30,6 +30,7 @@ module.exports = {
             offset: parseInt(limit) * (parseInt(page) - 1),
             order: [],
             where: {},
+            include: DokFile,
         };
 
         if (dok_id) {
@@ -80,7 +81,6 @@ module.exports = {
     },
 
     create: async(req, res) => {
-        console.log(req.body)
 
         try {
 
@@ -91,10 +91,14 @@ module.exports = {
 
             let newSpm = await sequelize.transaction(async (t) => {
 
-                // let newSpm  = await Spm.create(req.body,{
-                //     include: DokFile,
-                //     require: false
-                // });
+                if(!req.file){
+                    let count = await Spm.count() + 1;;
+                    count = '' + count;
+                    while (count.length < 8) {
+                        count = '0' + count;
+                    }
+                    req.body.dok_id =  `SPM_${count}`;
+                }
                 const newSpm  = await Spm.create(req.body, { transaction: t });
 
                 if(req.file){
@@ -106,26 +110,18 @@ module.exports = {
                         dokumen_size: req.file.size,
                         dokumen_file_type: req.file.mimetype
                     }, { transaction: t });
-
-                    // await DokFile.create({
-                    //     dokumen_path: pathFile,
-                    //     dokumen_id: req.body.dok_id,
-                    //     dokumen_name: req.file.filename,
-                    //     dokumen_size: req.file.size,
-                    //     dokumen_file_type: req.file.mimetype
-                    // });
                 }
             
                 return newSpm;
             
             });
 
-            newSpm  = await Spm.findOne({
-                include: DokFile,
-                where: {
-                    dok_id: req.body.dok_id,
-                },
-            });
+            // newSpm  = await Spm.findOne({
+            //     include: DokFile,
+            //     where: {
+            //         dok_id: req.body.dok_id,
+            //     },
+            // });
 
             if (newSpm) {
                 res.status(200).json(newSpm);
@@ -140,23 +136,52 @@ module.exports = {
 
         try {
 
-            let valiableSpm = await Spm.findOne({where:{ dok_id: req.params.id}});
-        
-            if (!valiableSpm) {
-                return res.status(404).send('gak ada sob');
-            }
+            let updateSpm = await sequelize.transaction(async (t) => {
 
-            if (req.body.lokasi_fisik) {
-                let box = req.body.lokasi_fisik.split('.');
-                box = box[box.length - 1].substring(1)
-                req.body.box = box;
-            }
-    
-            await valiableSpm.update(req.body);
-            res.status(200).json(valiableSpm);
+
+                let valiableSpm = await Spm.findOne({where:{ dok_id: req.params.id}});
+            
+                if (!valiableSpm) {
+                    return res.status(404).send('gak ada sob');
+                }
+
+                if (req.body.lokasi_fisik) {
+                    let box = req.body.lokasi_fisik.split('.');
+                    box = box[box.length - 1].substring(1)
+                    req.body.box = box;
+                }
+
+                valiableSpm = await valiableSpm.update(req.body,{ transaction: t });
+
+                if(req.file){
+                    let valiableDokFile = await DokFile.findOne({where:{ dokumen_id: req.body.dok_id}});
+                    let pathFile = `${process.env.STORAGE_DOCUMENT}/${req.body.fk_cat_id}/${req.body.dok_id}`;
+                    
+                    if (valiableDokFile) {;
+                        await valiableDokFile.update({
+                            dokumen_path: pathFile,
+                            dokumen_id: req.body.dok_id,
+                            dokumen_name: req.file.filename,
+                            dokumen_size: req.file.size,
+                            dokumen_file_type: req.file.mimetype
+                        },{ transaction: t });
+                    } else {
+                        await DokFile.create({
+                            dokumen_path: pathFile,
+                            dokumen_id: req.body.dok_id,
+                            dokumen_name: req.file.filename,
+                            dokumen_size: req.file.size,
+                            dokumen_file_type: req.file.mimetype
+                        },{ transaction: t });
+                    }
+                }
+                return valiableSpm
+            });
+
+            res.status(200).json(updateSpm);
 
         }catch(error) {
-
+            console.log(error)
         }
         
 
@@ -176,6 +201,26 @@ module.exports = {
                 success: true,
                 message: 'data berhasil di hapus'
             })
+
+        }catch(error) {
+            res.status(200).json({
+                success: false,
+                message: 'maaf, terjadi kesalahan pada server'
+            })
+        }
+    },
+
+    sendFile: async(req, res) => {
+        try {
+
+            let valiableDokumen = await DokFile.findOne({where:{ dokumen_name: req.params.id}});
+        
+            if (!valiableDokumen) {
+                return res.status(404).send('gak ada sob');
+            }
+
+            let file = `${process.env.STORAGE_ROOT}${valiableDokumen.dokumen_path}/${valiableDokumen.dokumen_name}`;
+            res.status(200).sendFile(file);
 
         }catch(error) {
             res.status(200).json({
