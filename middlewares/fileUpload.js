@@ -7,6 +7,7 @@ const path = require('path');
 
 const documentStorage =  multer.diskStorage({
     destination: async function (req, file, cb) {
+        console.log(req.body)
 
         if(req.method === 'POST') {
             let count = req.body.fk_cat_id === 'spm' ? await Spm.count() + 1 : await Spj.count() + 1;
@@ -17,7 +18,7 @@ const documentStorage =  multer.diskStorage({
             let dok_id = req.body.fk_cat_id === 'spm' ? `SPM_${count}` : `SPJ_${count}`;
             req.body.dok_id = dok_id;
     
-        } else {
+        } else if (req.method === 'PUT') {
             req.body.dok_id = req.params.id;
         }
 
