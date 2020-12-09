@@ -202,6 +202,28 @@ module.exports = {
 
     },
 
+    readById: async(req, res) => {
+
+        try {
+
+                let valiableSpm = await Spm.findOne({
+                    include: DokFile,
+                    where:{ dok_id: req.params.id}
+                });
+            
+                if (!valiableSpm) {
+                    return res.status(404).send('gak ada sob');
+                }
+
+                res.status(200).json(valiableSpm);
+
+        }catch(error) {
+            console.log(error)
+        }
+        
+
+    },
+
     remove: async(req, res) => {
         try {
 
@@ -235,7 +257,7 @@ module.exports = {
             }
 
             let file = `${process.env.STORAGE_ROOT}${valiableDokumen.dokumen_path}/${valiableDokumen.dokumen_name}`;
-            res.status(200).sendFile(file);
+            res.download(file);
 
         }catch(error) {
             res.status(200).json({
@@ -311,6 +333,104 @@ module.exports = {
         }catch(error) {
             console.log(error)
             res.status(502).json({
+                success: false,
+                message: 'maaf, terjadi kesalahan pada server'
+            })
+        }
+    },
+
+    makeReport: async (req, res) => {
+        const {
+            query : {
+                dok_id, 
+                skpd, 
+                kepada, 
+                keperluan,
+                no_spm,
+                no_sp2d,
+                lokasi_fisik,
+                tgl_spm,
+                box,
+                is_active,
+                // page,
+                // limit
+            }
+        } = req;
+
+        let filter = {
+            raw: false,
+            // limit: parseInt(limit),
+            // offset: parseInt(limit) * (parseInt(page) - 1),
+            order: [],
+            where: {},
+            include: DokFile,
+        };
+
+        if (dok_id) {
+            filter.where.dok_id = { [Op.like]: `%${dok_id}%` };
+        }
+        if (lokasi_fisik) {
+            filter.where.lokasi_fisik = { [Op.like]: `%${lokasi_fisik}%` };
+        }
+        if (skpd) {
+            filter.where.skpd = { [Op.like]: `%${skpd}%` };
+        }
+        if (kepada) {
+            filter.where.kepada = { [Op.like]: `%${kepada}%` };
+        }
+        if (keperluan) {
+            filter.where.keperluan = { [Op.like]: `%${keperluan}%` };
+        }
+        if (tgl_spm) {
+            filter.where.tgl_spm = { [Op.like]: `%${tgl_spm}%` };
+        }
+        if (no_spm) {
+            filter.where.no_spm = { [Op.like]: `%${no_spm}%` };
+        }
+        if (no_sp2d) {
+            filter.where.no_sp2d = { [Op.like]: `%${no_sp2d}%` };
+        }
+        if (box) {
+            filter.where.box = box;
+        }
+        if (is_active) {
+            filter.where.is_active = is_active;
+        }
+
+        try {
+            let {count: total, rows: data} = await Spm.findAndCountAll(filter);
+            // let data = await Spj.findAll(filter);
+
+            let ejs = require("ejs");
+            let pdf = require("html-pdf");
+            let path = require("path");
+
+            let dataRender = await ejs.renderFile(path.join(__dirname,'../views/report/','spm.ejs'),{data,total});
+            let options = {
+                "format": "Letter",        // allowed units: A3, A4, A5, Legal, Letter, Tabloid
+                "orientation": "landscape",
+                "paginationOffset": 1,
+                // "directory": '/temp',
+                "header": {
+                    "height": "10mm",
+                },
+                "footer": {
+                    "height": "10mm",
+                },
+            };
+
+            pdf.create(dataRender, options).toFile("report.pdf", function (err, data) {
+                if (err) {
+                    res.send(err);
+                } else {
+                    res.download(data.filename);
+
+                }
+            });
+
+        } catch(error){
+            console.log(error)
+            res.status(200).json({
                 success: false,
                 message: 'maaf, terjadi kesalahan pada server'
             })
