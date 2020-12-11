@@ -3,17 +3,17 @@ module.exports = (sequelize, DataTypes) => {
         dok_id: {
             primaryKey: true,
             type: DataTypes.STRING,
+            allowNull: false,
         },
         fk_cat_id: {
             type: DataTypes.STRING,
+            allowNull: false,
         },
         dok_header: {
             type: DataTypes.STRING,
-            allowNull: false,
             },
         dok_desc: {
             type: DataTypes.TEXT,
-            allowNull: false,
         },
         date_in: DataTypes.DATE,
         date_received: DataTypes.DATE,
@@ -46,8 +46,6 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.STRING,
             defaultValue: 1
         },
-        a_group: DataTypes.STRING,
-        group_id: DataTypes.STRING,
     }, 
     {
         //   createdAt: 'CreatedDate',
@@ -55,6 +53,10 @@ module.exports = (sequelize, DataTypes) => {
         timestamps: false,
         freezeTableName: true,
     });
-    // Schema.associate = (models) => {};
+    Schema.associate = (models) => {
+        models.dok_spj.hasOne(models.dokumen_files, {
+            foreignKey: 'dokumen_id'
+        })
+    };
     return Schema;
 };
