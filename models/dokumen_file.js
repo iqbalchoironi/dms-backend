@@ -34,11 +34,16 @@ module.exports = (sequelize, DataTypes) => {
         freezeTableName: true,
     });
     Schema.associate = (models) => {
+        models.dokumen_files.belongsTo(models.dok_spj, {
+            onDelete: 'CASCADE',
+            foreignKey: 'dokumen_id',
+            targetKey: 'dok_id',
+        });
         models.dokumen_files.belongsTo(models.dok_spm, {
             onDelete: 'CASCADE',
             foreignKey: 'dokumen_id',
             targetKey: 'dok_id',
-        })
+        });
     };
     return Schema;
 };
