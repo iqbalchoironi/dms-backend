@@ -38,13 +38,13 @@ const upload = multer({
     storage: documentStorage,
     fileFilter: function (req, file, callback) {
         var ext = path.extname(file.originalname);
-        if(ext !== '.png' && ext !== '.jpg' && ext !== '.jpeg' && ext !== '.pdf') {
-            return callback(new Error('Only png, jpg, jpeg and pdf are allowed'))
+        if(ext !== '.pdf') {
+            return callback(new Error('Only pdf are allowed'))
         }
         callback(null, true)
     },
     limits:{
-        fileSize: 1024 * 1024 * 10
+        fileSize: 1024 * 1024 * 50
     } 
 });
 
