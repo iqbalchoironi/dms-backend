@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      table {
+        border-collapse: collapse;
+      }
+      table, th, td {
+        border: 1px solid black;
+      }
+    </style>
+  </head>
+  <body>
+    <div style="width: 95%; margin: 10px;">
+      <div style="text-align: center; padding-left: 50px;">
+        <img src="./logo.png" />
+        <h3>LAPORAN SPM</h3>
+        <center>
+          <table style="text-allign : center; page-break-before: auto;">
+            <thead>
+              <th>NO</th>
+              <th>SKPD</th>
+              <th>Kepada</th>
+              <th>Keperluan</th>
+              <th>Kode Lokasi</th>
+              <th>Tahun</th>
+            </thead>
+            <% if (total > 0 ) { %>
+              <% data.forEach((dt,index) => {%>
+                  <tr>
+                    <td><%= index+1 %></td>
+                    <td><%= dt.skpd %></td>
+                    <td><%= dt.kepada %></td>
+                    <td><%= dt.keperluan %></td>
+                    <td><%= dt.lokasi_fisik %></td>
+                    <td><%= dt.tahun %></td> 
+                  </tr>
+              <%	});%>
+            <% }%>
+          </table>	
+        </center>
+      </div>
+    </div>
+</body>
+</html>

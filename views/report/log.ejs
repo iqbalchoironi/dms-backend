@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      table {
+        border-collapse: collapse;
+      }
+      table, th, td {
+        border: 1px solid black;
+      }
+    </style>
+  </head>
+  <body>
+    <div style="width: 95%; margin: 10px;">
+      <div style="text-align: center; padding-left: 50px;">
+        <img src="./logo.png" />
+        <h3>LAPORAN Logs</h3>
+        <center>
+          <table style="text-allign : center; page-break-before: auto;">
+            <thead>
+              <th>NO</th>
+              <th>Username</th>
+              <th>Tipe Aktifitas</th>
+              <th>Objek</th>
+              <th>Id Objek</th>
+              <th>Deskripsi Aktifitas</th>
+              <th>Tanggal Aktivitas</th>
+            </thead>
+            <% if (total > 0 ) { %>
+              <% data.forEach((dt,index) => {%>
+                  <tr>
+                    <td><%= index+1 %></td>
+                    <td><%= dt.fk_username %></td>
+                    <td><%= dt.activity_type %></td>
+                    <td><%= dt.activity_object %></td>
+                    <td><%= dt.activity_object_detil %></td>
+                    <td><%= dt.activity_desc %></td>
+                    <td><%= dt.activity_times %></td>
+                  </tr>
+              <%	});%>
+            <% }%>
+          </table>	
+        </center>
+      </div>
+    </div>
+</body>
+</html>

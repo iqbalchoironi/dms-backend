@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      table {
+        border-collapse: collapse;
+      }
+      table, th, td {
+        border: 1px solid black;
+      }
+    </style>
+  </head>
+  <body>
+    <div style="width: 95%; margin: 10px;">
+      <div style="text-align: center; padding-left: 50px;">
+        <img src="./logo.png" />
+        <h3>LAPORAN PEMINJAMAN</h3>
+        <center>
+          <table style="text-allign : center; page-break-before: auto;">
+            <thead>
+              <th>NO</th>
+              <th>Id Dokumen</th>
+              <th>Tanggal Peminjaman</th>
+              <th>Jadwal Pengembalian</th>
+              <th>Tanggal Pengembalian</th>
+              <th>Peminjam</th>
+              <th>fk_user_id</th>
+              <th>Keperluan</th>
+            </thead>
+            <% if (total > 0 ) { %>
+              <% data.forEach((dt,index) => {%>
+                  <tr>
+                    <td><%= index+1 %></td>
+                    <td><%= dt.fk_dok_id %></td>
+                    <td><%= dt.date_pinjam %></td>
+                    <td><%= dt.date_hrs_kembali %></td>
+                    <td><%= dt.date_kembali %></td>
+                    <td><%= dt.peminjam %></td>
+                    <td><%= dt.fk_user_id %></td>
+                    <td><%= dt.log_desc %></td>  
+                  </tr>
+              <%	});%>
+            <% }%>
+          </table>	
+        </center>
+      </div>
+    </div>
+</body>
+</html>
