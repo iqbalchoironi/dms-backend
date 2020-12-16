@@ -1,6 +1,7 @@
 const Spm = require('../models').dok_spm;
 const DokFile = require('../models').dokumen_files;
 const LogActivity = require('../models').log_activity;
+const Category = require('../models').kategori;
 const { Op } = require('sequelize');
 const {sequelize} = require('../models')
 const setId = require('../helpers/setIdDocument');
@@ -94,11 +95,14 @@ module.exports = {
             box = box[box.length - 1];
             req.body.box = box;
 
-
             let newSpm = await sequelize.transaction(async (t) => {
+                
+                let CatSpm = await Category.findOne({
+                    where:{ id: 'spm'}
+                });
+                let count = await CatSpm.index_id + 1
 
                 if(!req.file){
-                    let count = await Spm.count() + 1;
                     let dokIdIndex = await setId(count);
                     req.body.dok_id =  `SPM_${dokIdIndex}`;
                 }
@@ -114,6 +118,10 @@ module.exports = {
                         dokumen_file_type: req.file.mimetype
                     }, { transaction: t });
                 }
+
+                await CatSpm.update({
+                    index_id: count
+                },{ transaction: t})
 
                 let now = moment(); 
                 await LogActivity.create({
@@ -159,7 +167,6 @@ module.exports = {
         try {
 
             let updateSpm = await sequelize.transaction(async (t) => {
-
 
                 let valiableSpm = await Spm.findOne({where:{ dok_id: req.params.id}});
             
@@ -228,16 +235,16 @@ module.exports = {
 
         try {
 
-                let valiableSpm = await Spm.findOne({
-                    include: DokFile,
-                    where:{ dok_id: req.params.id}
-                });
-            
-                if (!valiableSpm) {
-                    return res.status(404).send('gak ada sob');
-                }
+            let valiableSpm = await Spm.findOne({
+                include: DokFile,
+                where:{ dok_id: req.params.id}
+            });
+        
+            if (!valiableSpm) {
+                return res.status(404).send('gak ada sob');
+            }
 
-                res.status(200).json(valiableSpm);
+            res.status(200).json(valiableSpm);
 
         }catch(error) {
             console.log(error);
@@ -452,7 +459,7 @@ module.exports = {
 
             let dataRender = await ejs.renderFile(path.join(__dirname,'../views/report/','spm.ejs'),{data,total});
             let options = {
-                "format": "Letter",        // allowed units: A3, A4, A5, Legal, Letter, Tabloid
+                "format": "A3",        // allowed units: A3, A4, A5, Legal, Letter, Tabloid
                 "orientation": "landscape",
                 "paginationOffset": 1,
                 // "directory": '/temp',
