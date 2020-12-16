@@ -2,7 +2,7 @@ const LogDocumentPhisic = require('../models').log_dok_fisik;
 const LogActivity = require('../models').log_activity;
 const { Op } = require('sequelize');
 const { sequelize } = require('../models');
-const { PRINT, DOCUMENT } = require('../helpers/logType');
+const { PRINT, REPORT, CREATE, LOAN, UPDATE, DELETE } = require('../helpers/logType');
 const moment = require('moment');
 
 module.exports = {
@@ -175,12 +175,12 @@ module.exports = {
                     fk_username: req.user.username,
                     activity_type: DELETE,
                     activity_object: LOAN,
-                    activity_object_detil: newLogDocumentPhisic.fk_dok_id,
-                    activity_desc: `${req.user.username} ${DELETE} ${LOAN} ${newLogDocumentPhisic.fk_dok_id} pada ${now}`,
+                    activity_object_detil: valiableLogDocumentPhisic.fk_dok_id,
+                    activity_desc: `${req.user.username} ${DELETE} ${LOAN} ${valiableLogDocumentPhisic.fk_dok_id} pada ${now}`,
                     activity_times: now,
                 },{ transaction: t});
         
-                await valiableLogDocumentPhisic.destroy();
+                await valiableLogDocumentPhisic.destroy({transaction:t});
 
             });
             
@@ -253,7 +253,7 @@ module.exports = {
 
             let dataRender = await ejs.renderFile(path.join(__dirname,'../views/report/','peminjaman.ejs'),{data,total});
             let options = {
-                "format": "Letter",        // allowed units: A3, A4, A5, Legal, Letter, Tabloid
+                "format": "A3",        // allowed units: A3, A4, A5, Legal, Letter, Tabloid
                 "orientation": "landscape",
                 "paginationOffset": 1,
                 // "directory": '/temp',
