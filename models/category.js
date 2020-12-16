@@ -17,11 +17,13 @@ module.exports = (sequelize, DataTypes) => {
         },
         icon: {
             type: DataTypes.STRING,
-            allowNull:false,
         },
         dir_location: {
+            type: DataTypes.STRING,
+        },
+        index_id: {
             type: DataTypes.INTEGER,
-            allowNull: false,
+            defaultValue: 0
         },
         is_active: {
             type: DataTypes.BOOLEAN,
