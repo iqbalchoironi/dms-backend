@@ -133,6 +133,31 @@ module.exports = {
                 message: 'maaf, terjadi kesalahan pada server'
             });
         }
-    }
+    },
+
+    remove: async(req, res) => {
+        try {
+                
+            let valiableLog = await LogActivity.findOne({where:{ id: req.params.id}});
+        
+            if (!valiableLog) {
+                return res.status(404).send('gak ada sob');
+            }
+    
+            await valiableLog.destroy();
+            
+            res.status(200).json({
+                success: true,
+                message: 'data berhasil di hapus'
+            })
+
+        }catch(error) {
+            console.log(error);
+            res.status(500).json({
+                success: false,
+                message: 'maaf, terjadi kesalahan pada server'
+            });
+        }
+    },
 
 }
