@@ -8,7 +8,11 @@ module.exports = {
             let data = await Category.findAll({limit:parseInt(req.query.limit)});
             res.json(data);
         } catch(error){
-            console.error(error);
+            console.log(error);
+            res.status(500).json({
+                success: false,
+                message: 'maaf, terjadi kesalahan pada server'
+            });
         }
     },
 
@@ -29,7 +33,11 @@ module.exports = {
             }
 
         }catch(error) {
-            console.log(error)
+            console.log(error);
+            res.status(500).json({
+                success: false,
+                message: 'maaf, terjadi kesalahan pada server'
+            });
         }
     },
 
@@ -47,7 +55,11 @@ module.exports = {
             res.status(200).json(valiableCategory);
 
         }catch(error) {
-
+            console.log(error);
+            res.status(500).json({
+                success: false,
+                message: 'maaf, terjadi kesalahan pada server'
+            });
         }
         
 
@@ -66,7 +78,11 @@ module.exports = {
             res.status(200).send('udah di delete');
 
         }catch(error) {
-            
+            console.log(error);
+            res.status(500).json({
+                success: false,
+                message: 'maaf, terjadi kesalahan pada server'
+            });
         }
     }
 }
