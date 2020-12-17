@@ -276,6 +276,13 @@ module.exports = {
             if (!valiableUser) {
                 return res.status(404).send('gak ada sob');
             }
+
+            if (valiableUser.username === req.user.username) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'anda tidak bisa menghapus diri sendiri'
+                })
+            }
             
             await sequelize.transaction( async t => {
 
