@@ -32,10 +32,10 @@ module.exports = {
             filter.where.fk_username = { [Op.like]: `%${fk_username}%` };
         }
         if (activity_type) {
-            filter.where.activity_type = activity_type;
+            filter.where.activity_type = { [Op.like]: `%${activity_type}%` };
         }
         if (activity_object) {
-            filter.where.activity_object = activity_object;
+            filter.where.activity_object = { [Op.like]: `%${activity_object}%` };
         }
         if (activity_object_detil) {
             filter.where.activity_object_detil = { [Op.like]: `%${activity_object_detil}%` };
