@@ -3,7 +3,7 @@ const {hashPassword,comparePassword, generateUserToken} = require('../helpers/au
 const LogActivity = require('../models').log_activity;
 const { sequelize } = require('../models');
 const { Op } = require('sequelize');
-const { USER, CREATE, UPDATE, DELETE } = require('../helpers/logType');
+const { USER, CREATE, UPDATE, UPDATE_PASSWORD, DELETE } = require('../helpers/logType');
 const moment = require('moment');
 
 module.exports = {
@@ -187,6 +187,65 @@ module.exports = {
                     activity_object: USER,
                     activity_object_detil: valiableUser.username,
                     activity_desc: `${req.user.username} ${UPDATE} ${USER} ${valiableUser.username} pada ${now}`,
+                    activity_times: now,
+                },{ transaction: t});
+
+            })
+
+
+            res.status(200).json({
+                success: true,
+                message: "user telah diupdate"
+            });
+
+        }catch(error) {
+            console.log(error);
+            res.status(500).json({
+                success: false,
+                message: 'maaf, terjadi kesalahan pada server'
+            });
+        }
+        
+
+    },
+
+    updatePassword: async(req, res) => {
+
+        let { admin_password, newpassword } = req.body;
+        
+        try {
+
+            let valiableAdmin = await User.findOne({where:{ id: req.user.user_id}});
+            let valiableUser = await User.findOne({where:{ id: req.params.id}});
+        
+            if (!valiableAdmin) {
+                return res.status(404).send('admin gak ada sob');
+            }
+
+            if (!valiableUser) {
+                return res.status(404).send('gak ada sob');
+            }
+
+            if (!comparePassword(valiableAdmin.password, admin_password)) {
+                return res.status(401).json({
+                    success: false,
+                    message: "password admin salah"
+                });
+            }
+
+            let hashedPassword = hashPassword(newpassword);
+
+            await sequelize.transaction(async t => {
+
+                await valiableUser.update({ password: hashedPassword }, {transaction: t});
+    
+                let now = moment(); 
+                await LogActivity.create({
+                    fk_username: req.user.username,
+                    activity_type: UPDATE_PASSWORD,
+                    activity_object: USER,
+                    activity_object_detil: valiableUser.username,
+                    activity_desc: `${req.user.username} ${UPDATE_PASSWORD} ${USER} ${valiableUser.username} pada ${now}`,
                     activity_times: now,
                 },{ transaction: t});
 
