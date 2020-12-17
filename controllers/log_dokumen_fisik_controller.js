@@ -1,5 +1,7 @@
 const LogDocumentPhisic = require('../models').log_dok_fisik;
 const LogActivity = require('../models').log_activity;
+const Spm = require('../models').dok_spm;
+const Spj = require('../models').dok_spj;
 const { Op } = require('sequelize');
 const { sequelize } = require('../models');
 const { PRINT, REPORT, CREATE, LOAN, UPDATE, DELETE } = require('../helpers/logType');
@@ -29,6 +31,9 @@ module.exports = {
             offset: parseInt(limit) * (parseInt(page) - 1),
             order: [],
             where: {},
+            order: [
+                ['date_kembali', 'ASC'],
+            ]
         };
 
         if (fk_dok_id) {
@@ -85,6 +90,30 @@ module.exports = {
 
         req.body.fk_user_id = req.user.user_id;
         req.body.date_pinjam = new moment.utc();
+
+        let valiableSpm = await Spm.findOne({where:{dok_id: req.body.fk_dok_id}});
+        let valiableSpj = await Spj.findOne({where:{dok_id: req.body.fk_dok_id}});
+
+        if (!valiableSpj && !valiableSpm){
+            return res.status(400).json({
+                success: false,
+                message: "dokumen id tidak dikenali"
+            });
+        }
+        
+        let valiableDokId = await LogDocumentPhisic.findOne({
+            where:{ 
+                fk_dok_id: req.body.fk_dok_id,
+                date_kembali: null
+            }
+        });
+
+        if (valiableDokId){
+            return res.status(400).json({
+                success: false,
+                message: "dokumen telah dipinjamkan"
+            });
+        }
 
         try {
 
