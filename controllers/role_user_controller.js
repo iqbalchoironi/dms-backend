@@ -48,7 +48,7 @@ module.exports = {
             let valiableRole = await Role.findOne({where:{ id: req.params.id}});
         
             if (!valiableRole) {
-                return res.status(404).send('gak ada sob');
+                return res.status(404).json({success:false, message:'tidak ditemukan'})
             }
 
             await valiableRole.update(req.body);
@@ -71,7 +71,7 @@ module.exports = {
             let valiableRole = await Role.findOne({where:{ id: req.params.id}});
         
             if (!valiableRole) {
-                return res.status(404).send('gak ada sob');
+                return res.status(404).json({success:false, message:'tidak ditemukan'})
             }
     
             await valiableRole.destroy();

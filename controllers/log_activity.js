@@ -144,7 +144,7 @@ module.exports = {
             let valiableLog = await LogActivity.findOne({where:{ id: req.params.id}});
         
             if (!valiableLog) {
-                return res.status(404).send('gak ada sob');
+                return res.status(404).json({success:false, message:'tidak ditemukan'})
             }
     
             await valiableLog.destroy();

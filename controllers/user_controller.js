@@ -38,7 +38,7 @@ module.exports = {
 
             let token = generateUserToken(valiableUser.id, valiableUser.username, valiableUser.is_active, valiableUser.role_user_id);
             
-            res.status(200).send({
+            res.status(200).json({
                 token: token,
                 user_id:valiableUser.id,
                 username:valiableUser.username
@@ -164,7 +164,7 @@ module.exports = {
             let valiableUser = await User.findOne({where:{ id: req.params.id}});
         
             if (!valiableUser) {
-                return res.status(404).send('gak ada sob');
+                return res.status(404).json({success:false, message:'tidak ditemukan'})
             }
     
             if (req.body.username) {
@@ -223,7 +223,7 @@ module.exports = {
             }
 
             if (!valiableUser) {
-                return res.status(404).send('gak ada sob');
+                return res.status(404).json({success:false, message:'tidak ditemukan'})
             }
 
             if (!comparePassword(valiableAdmin.password, admin_password)) {
@@ -274,7 +274,7 @@ module.exports = {
             let valiableUser = await User.findOne({where:{ id: req.params.id}});
         
             if (!valiableUser) {
-                return res.status(404).send('gak ada sob');
+                return res.status(404).json({success:false, message:'tidak ditemukan'})
             }
 
             if (valiableUser.username === req.user.username) {

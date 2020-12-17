@@ -156,7 +156,7 @@ module.exports = {
                 let valiableLogDocumentPhisic = await LogDocumentPhisic.findOne({where:{ id: req.params.id}});
 
                 if (!valiableLogDocumentPhisic) {
-                    return res.status(404).send('gak ada sob');
+                    return res.status(404).json({success:false, message:'tidak ditemukan'})
                 }
     
                 let now = moment(); 
@@ -196,7 +196,7 @@ module.exports = {
                 let valiableLogDocumentPhisic = await LogDocumentPhisic.findOne({where:{ id: req.params.id}});
             
                 if (!valiableLogDocumentPhisic) {
-                    return res.status(404).send('gak ada sob');
+                    return res.status(404).json({success:false, message:'tidak ditemukan'})
                 }
     
                 let now = moment(); 

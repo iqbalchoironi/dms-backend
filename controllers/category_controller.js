@@ -48,7 +48,7 @@ module.exports = {
             let valiableCategory = await Category.findOne({where:{ id: req.params.id}});
         
             if (!valiableCategory) {
-                return res.status(404).send('gak ada sob');
+                return res.status(404).json({success:false, message:'tidak ditemukan'})
             }
     
             await valiableCategory.update(req.body);
@@ -71,7 +71,7 @@ module.exports = {
             let valiableCategory = await Category.findOne({where:{ id: req.params.id}});
         
             if (!valiableCategory) {
-                return res.status(404).send('gak ada sob');
+                return res.status(404).json({success:false, message:'tidak ditemukan'})
             }
     
             await valiableCategory.destroy();

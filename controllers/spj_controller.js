@@ -161,7 +161,7 @@ module.exports = {
                 let valiableSpj = await Spj.findOne({where:{ dok_id: req.params.id}});
             
                 if (!valiableSpj) {
-                    return res.status(404).send('gak ada sob');
+                    return res.status(404).json({success:false, message:'tidak ditemukan'})
                 }
 
                 if (req.body.lokasi_fisik) {
@@ -229,7 +229,7 @@ module.exports = {
                 });
             
                 if (!valiableSpj) {
-                    return res.status(404).send('gak ada sob');
+                    return res.status(404).json({success:false, message:'tidak ditemukan'})
                 }
 
                 res.status(200).json(valiableSpj);
@@ -251,7 +251,7 @@ module.exports = {
             let valiableSpj = await Spj.findOne({where:{ dok_id: req.params.id}});
         
             if (!valiableSpj) {
-                return res.status(404).send('gak ada sob');
+                return res.status(404).json({success:false, message:'tidak ditemukan'})
             }
 
             await sequelize.transaction(async t => {
@@ -290,7 +290,7 @@ module.exports = {
             let valiableDokumen = await DokFile.findOne({where:{ dokumen_name: req.params.id}});
         
             if (!valiableDokumen) {
-                return res.status(404).send('gak ada sob');
+                return res.status(404).json({success:false, message:'tidak ditemukan'})
             }
 
             let file = `${process.env.STORAGE_ROOT}${valiableDokumen.dokumen_path}/${valiableDokumen.dokumen_name}`;
