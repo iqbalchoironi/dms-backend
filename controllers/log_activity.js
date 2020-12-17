@@ -23,6 +23,9 @@ module.exports = {
             offset: parseInt(limit) * (parseInt(page) - 1),
             order: [],
             where: {},
+            order: [
+                ['activity_times', 'DESC'],
+            ]
         };
 
         if (fk_username) {
