@@ -7,7 +7,6 @@ const path = require('path');
 
 const documentStorage =  multer.diskStorage({
     destination: async function (req, file, cb) {
-        console.log(req.body)
 
         if(req.method === 'POST') {
             let dokIdIndex = ''

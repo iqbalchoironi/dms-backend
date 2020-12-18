@@ -332,7 +332,6 @@ module.exports = {
 
             let inputs = [];
             let count = await Spj.count();
-            console.log(rows.length)
             rows.forEach(async (row) => {
                 let box = row['A'].split('.');
                     box = box[box.length - 1];

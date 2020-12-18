@@ -2,7 +2,6 @@ const jwt = require('jsonwebtoken');
 
 const verifyToken = async (req, res, next) => {
     const { authorization } = req.headers;
-    console.log(authorization)
 
     if( !authorization ) {
         return res.status(401).json({
@@ -16,8 +15,6 @@ const verifyToken = async (req, res, next) => {
         req.user = {
             ...decode
         };
-
-        console.log(decode);
 
         if(req.user.is_active === false) {
             return res.status(403).json({
