@@ -1,7 +1,7 @@
 const multer  = require('multer');
 const fs = require('fs');
-const Spm = require('../models').dok_spm;
-const Spj = require('../models').dok_spj;
+const Category = require('../models').kategori;
+const setId = require('../helpers/setIdDocument');
 
 const path = require('path');
 
@@ -10,12 +10,21 @@ const documentStorage =  multer.diskStorage({
         console.log(req.body)
 
         if(req.method === 'POST') {
-            let count = req.body.fk_cat_id === 'spm' ? await Spm.count() + 1 : await Spj.count() + 1;
-            count = '' + count;
-            while (count.length < 8) {
-                count = '0' + count;
+            let dokIdIndex = ''
+            if (req.body.fk_cat_id === 'spm') {
+                let CatSpj = await Category.findOne({
+                    where:{ id: 'spm'}
+                });
+                let count = await CatSpj.index_id + 1;
+                dokIdIndex = await setId(count);
+            } else {
+                let CatSpj = await Category.findOne({
+                    where:{ id: 'spj'}
+                });
+                let count = await CatSpj.index_id + 1;
+                dokIdIndex = await setId(count);
             }
-            let dok_id = req.body.fk_cat_id === 'spm' ? `SPM_${count}` : `SPJ_${count}`;
+            let dok_id = req.body.fk_cat_id === 'spm' ? `SPM_${dokIdIndex}` : `SPJ_${dokIdIndex}`;
             req.body.dok_id = dok_id;
     
         } else if (req.method === 'PUT') {
