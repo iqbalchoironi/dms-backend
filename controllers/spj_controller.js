@@ -305,6 +305,77 @@ module.exports = {
         }
     },
 
+    // exelToDB: async (req, res) => {
+
+    //     if (req.file == undefined) {
+    //         return res.status(400).send("Please upload an excel file!");
+    //     }
+
+    //     try {
+
+    //         let path = `${req.file.destination}/${req.file.filename}`
+
+    //         const workbook = xlsx.read(path, { type: 'file' });
+    //         const [firstSheetName] = workbook.SheetNames;
+    //         const worksheet = workbook.Sheets[firstSheetName];
+    //         const rows = await xlsx.utils.sheet_to_json(worksheet, {
+    //             header: 'A',
+    //             range: 0,
+    //             blankrows: false,
+    //             defval: null,
+    //             raw: true,
+    //         });
+
+    //         rows.shift();
+    //         rows.shift();
+    //         rows.shift();
+
+    //         let inputs = [];
+    //         let CatSpm = await Category.findOne({
+    //             where:{ id: 'spm'}
+    //         });
+    //         let count = await CatSpm.index_id;
+            
+    //         rows.forEach(async (row) => {
+    //             let box = row['A'].split('.');
+    //                 box = box[box.length - 1];
+                
+    //             count++;
+    //             let dokIdIndex = await setId(count);
+                
+    //             let input = {
+    //                 lokasi_fisik: row['A'],
+    //                 skpd        : row['B'],
+    //                 kepada      : row['C'],
+    //                 keperluan   : row['D'],
+    //                 tahun       : row['E'],
+    //                 fk_cat_id   : 'spj',
+    //                 dok_id      : `SPJ_${dokIdIndex}`,
+    //                 box         : box
+    //             };
+    //             inputs.push(input);
+    //         });
+                
+    //         let totalInputSpj = await sequelize.transaction(async (t) => {
+
+    //             let inputSpjs = await Spj.bulkCreate(inputs,{ transaction: t });
+    //             return inputSpjs
+    //         });
+
+    //             res.status(200).json({
+    //                 success: true,
+    //                 data: totalInputSpj
+    //             })
+
+    //     }catch(error) {
+    //         console.log(error);
+    //         res.status(500).json({
+    //             success: false,
+    //             message: 'maaf, terjadi kesalahan pada server'
+    //         });
+    //     }
+    // },
+
     exelToDB: async (req, res) => {
 
         if (req.file == undefined) {
@@ -330,38 +401,64 @@ module.exports = {
             rows.shift();
             rows.shift();
 
-            let inputs = [];
-            let count = await Spj.count();
-            rows.forEach(async (row) => {
-                let box = row['A'].split('.');
-                    box = box[box.length - 1];
-                
-                count++;
-                let dokIdIndex = await setId(count);
-                
-                let input = {
-                    lokasi_fisik: row['A'],
-                    skpd        : row['B'],
-                    kepada      : row['C'],
-                    keperluan   : row['D'],
-                    tahun       : row['E'],
-                    fk_cat_id   : 'spj',
-                    dok_id      : `SPJ_${dokIdIndex}`,
-                    box         : box
-                };
-                inputs.push(input);
+            let CatSpj = await Category.findOne({
+                where:{ id: 'spj'}
             });
-                
-            let totalInputSpj = await sequelize.transaction(async (t) => {
+            let count = await CatSpj.index_id;
 
-                let inputSpjs = await Spj.bulkCreate(inputs,{ transaction: t });
-                return inputSpjs
+            await sequelize.transaction(async (t) => {
+                let promises = [];
+                rows.forEach(async (row) => {
+                    let box = row['A'].split('.');
+                        box = box[box.length - 1];
+                    
+                    count++;
+                    let dokIdIndex = await setId(count);
+                    
+                    let input = {
+                        lokasi_fisik: row['A'],
+                        skpd        : row['B'],
+                        kepada      : row['C'],
+                        keperluan   : row['D'],
+                        tahun       : row['E'],
+                        fk_cat_id   : 'spj',
+                        dok_id      : `SPJ_${dokIdIndex}`,
+                        box         : box,
+                        'pending':true
+                    };
+                    let newSpj = Spj.create(input,{raw: true},{transaction:t});
+                    promises.push(newSpj);
+
+                    let now = moment(); 
+                    let LogActivityNew = LogActivity.create({
+                        fk_username: req.user.username,
+                        activity_type: CREATE,
+                        activity_object: DOCUMENT,
+                        activity_object_detil: `SPJ_${dokIdIndex}`,
+                        activity_desc: `${req.user.username} ${CREATE} ${DOCUMENT} ${newSpj.dok_id} pada ${now}`,
+                        activity_times: now,
+                        'pending':true
+                    },{raw: true},{transaction:t});
+                    promises.push(LogActivityNew);
+                });
+
+                let newCount = Category.update(
+                    {
+                        index_id: count,
+                        'pending':true
+                    },{
+                        where:{ id: 'spj'}
+                    },{ transaction: t})
+                promises.push(newCount);
+
+                return Promise.all(promises);
+
             });
 
-                res.status(200).json({
-                    success: true,
-                    data: totalInputSpj
-                })
+            res.status(200).json({
+                success: true,
+                data: 'import data telah berhasil dilakukan'
+            })
 
         }catch(error) {
             console.log(error);

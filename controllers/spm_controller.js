@@ -317,6 +317,80 @@ module.exports = {
         }
     },
 
+    // exelToDB: async (req, res) => {
+
+    //     if (req.file == undefined) {
+    //         return res.status(400).send("Please upload an excel file!");
+    //     }
+
+    //     try {
+
+    //         let path = `${req.file.destination}/${req.file.filename}`
+
+    //         const workbook = xlsx.read(path, { type: 'file' });
+    //         const [firstSheetName] = workbook.SheetNames;
+    //         const worksheet = workbook.Sheets[firstSheetName];
+    //         const rows = await xlsx.utils.sheet_to_json(worksheet, {
+    //             header: 'A',
+    //             range: 0,
+    //             blankrows: false,
+    //             defval: null,
+    //             raw: true,
+    //         });
+
+    //         rows.shift();
+    //         rows.shift();
+    //         rows.shift();
+
+    //         let count = await Spm.count();
+            
+    //             rows.forEach(async (row) => {
+    //                 let box = row['A'].split('.');
+    //                     box = box[box.length - 1];
+                    
+    //                 count++;
+    //                 let dokIdIndex = await setId(count);
+                    
+    //                 let input = {
+    //                     lokasi_fisik: row['A'],
+    //                     skpd        : row['B'],
+    //                     kepada      : row['C'],
+    //                     keperluan   : row['D'],
+    //                     no_spm      : row['E'],
+    //                     no_sp2d     : row['F'],
+    //                     tgl_spm     : new moment.utc(row['G'],'DD-MM-YYYY'),
+    //                     fk_cat_id   : 'spm',
+    //                     dok_id      : `SPM_${dokIdIndex}`,
+    //                     box         : box
+    //                 };
+    //                 let newSpm = await Spm.create(input,{ raw: true});
+
+    //                 let now = moment(); 
+    //                 await LogActivity.create({
+    //                     fk_username: req.user.username,
+    //                     activity_type: CREATE,
+    //                     activity_object: DOCUMENT,
+    //                     activity_object_detil: newSpm.dok_id,
+    //                     activity_desc: `${req.user.username} ${CREATE} ${DOCUMENT} ${newSpm.dok_id} pada ${now}`,
+    //                     activity_times: now,
+    //                 });
+
+    //             });
+
+    //         res.status(200).json({
+    //             success: true,
+    //             data: 'import data telah berhasil dilakukan'
+    //         })
+
+    //     }catch(error) {
+    //         console.log(error);
+    //         res.status(500).json({
+    //             success: false,
+    //             message: 'maaf, terjadi kesalahan pada server'
+    //         });
+    //     }
+    // },
+
     exelToDB: async (req, res) => {
 
         if (req.file == undefined) {
@@ -342,8 +416,13 @@ module.exports = {
             rows.shift();
             rows.shift();
 
-            let count = await Spm.count();
+            let CatSpm = await Category.findOne({
+                where:{ id: 'spm'}
+            });
+            let count = await CatSpm.index_id;
             
+            await sequelize.transaction(async (t) => {
+                let promises = []
                 rows.forEach(async (row) => {
                     let box = row['A'].split('.');
                         box = box[box.length - 1];
@@ -361,21 +440,37 @@ module.exports = {
                         tgl_spm     : new moment.utc(row['G'],'DD-MM-YYYY'),
                         fk_cat_id   : 'spm',
                         dok_id      : `SPM_${dokIdIndex}`,
-                        box         : box
+                        box         : box,
+                        'pending':true
                     };
-                    let newSpm = await Spm.create(input,{ raw: true});
+
+                    let newSpm = Spm.create(input,{raw: true},{transaction:t});
+                    promises.push(newSpm);
 
                     let now = moment(); 
-                    await LogActivity.create({
+                    let LogActivityNew = LogActivity.create({
                         fk_username: req.user.username,
                         activity_type: CREATE,
                         activity_object: DOCUMENT,
-                        activity_object_detil: newSpm.dok_id,
+                        activity_object_detil: `SPM_${dokIdIndex}`,
                         activity_desc: `${req.user.username} ${CREATE} ${DOCUMENT} ${newSpm.dok_id} pada ${now}`,
                         activity_times: now,
-                    });
-
+                        'pending':true
+                    },{raw: true},{transaction:t});
+                    promises.push(LogActivityNew);
                 });
+
+                let newCount = Category.update(
+                    {
+                        index_id: count,
+                        'pending':true
+                    },{
+                        where:{ id: 'spm'}
+                    },{ transaction: t})
+                promises.push(newCount);
+
+                return Promise.all(promises);
+            });
 
             res.status(200).json({
                 success: true,
