@@ -161,8 +161,21 @@ module.exports = {
 
         try {
 
+            
+            if (req.user.username !== 'admin123' && req.params.id === '0192023a7bbd73250516f069df18b500') {
+                return res.status(404).json({
+                    success: false,
+                    message: 'anda tidak dapat mengubah admin ini'
+                })
+            }
+
+            if (req.user.username === 'admin123' && req.params.id === '0192023a7bbd73250516f069df18b500') {
+                delete req.body.role_user_id;
+                delete req.body.is_active;
+            }
+            
             let valiableUser = await User.findOne({where:{ id: req.params.id}});
-        
+
             if (!valiableUser) {
                 return res.status(404).json({success:false, message:'tidak ditemukan'})
             }
@@ -171,9 +184,18 @@ module.exports = {
                 delete req.body.username;
             }
 
+            if (req.body.role_user_id == 1 && req.user.username !== 'admin123') {
+                return res.status(404).json({
+                    success: false,
+                    message: 'anda tidak dapat mengubah user role menjadi admin'
+                })
+            }
+
             if (req.body.password) {
-                let hashedPassword = hashPassword(req.body.password);
-                req.body.password = hashedPassword;
+                return res.status(404).json({
+                    success: false,
+                    message: 'anda tidak dapat mengubah password disini'
+                })
             }
 
             await sequelize.transaction(async t => {
@@ -230,6 +252,13 @@ module.exports = {
                 return res.status(401).json({
                     success: false,
                     message: "password admin salah"
+                });
+            }
+
+            if (valiableAdmin.username !== valiableUser.username && valiableUser.role_user_id === 1 && valiableAdmin.username !== 'admin123') {
+                return res.status(404).json({
+                    success: false,
+                    message: "admin tidak dapat merubah admin lain"
                 });
             }
 
