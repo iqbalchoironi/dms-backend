@@ -6,6 +6,9 @@ const { sequelize } = require('../models');
 const setId = require('../helpers/setIdDocument');
 const xlsx = require('xlsx');
 const moment = require('moment');
+const puppeteer = require("puppeteer");
+const toPdf = require('../helpers/toPdf');
+const path = require("path");
 
 const LogActivity = require('../models').log_activity;
 const { PRINT, DOCUMENT, CREATE, UPDATE, DELETE } = require('../helpers/logType');
@@ -469,6 +472,105 @@ module.exports = {
         }
     },
 
+    // makeReport: async (req, res) => {
+    //     const {
+    //         query : {
+    //             dok_id, 
+    //             lokasi_fisik, 
+    //             skpd, 
+    //             kepada,
+    //             keperluan,
+    //             tahun,
+    //             box,
+    //             is_active,
+    //             // page,
+    //             // limit
+    //         }
+    //     } = req;
+
+    //     let filter = {
+    //         raw: false,
+    //         // limit: parseInt(limit),
+    //         // offset: parseInt(limit) * (parseInt(page) - 1),
+    //         order: [],
+    //         where: {},
+    //         include: DokFile,
+    //     };
+
+    //     if (dok_id) {
+    //         filter.where.dok_id = { [Op.like]: `%${dok_id}%` };
+    //     }
+    //     if (lokasi_fisik) {
+    //         filter.where.lokasi_fisik = { [Op.like]: `%${lokasi_fisik}%` };
+    //     }
+    //     if (skpd) {
+    //         filter.where.skpd = { [Op.like]: `%${skpd}%` };
+    //     }
+    //     if (kepada) {
+    //         filter.where.kepada = { [Op.like]: `%${kepada}%` };
+    //     }
+    //     if (keperluan) {
+    //         filter.where.keperluan = { [Op.like]: `%${keperluan}%` };
+    //     }
+    //     if (tahun) {
+    //         filter.where.tahun = tahun;
+    //     }
+    //     if (box) {
+    //         filter.where.box = box;
+    //     }
+    //     if (is_active) {
+    //         filter.where.is_active = is_active;
+    //     }
+
+    //     try {
+    //         let {count: total, rows: data} = await Spj.findAndCountAll(filter);
+
+    //         let ejs = require("ejs");
+    //         let pdf = require("html-pdf");
+    //         let path = require("path");
+
+    //         let dataRender = await ejs.renderFile(path.join(__dirname,'../views/report/','spj.ejs'),{data,total});
+    //         let options = {
+    //             "format": "A3",
+    //             "orientation": "landscape",
+    //             "paginationOffset": 1,
+    //             "header": {
+    //                 "height": "10mm",
+    //             },
+    //             "footer": {
+    //                 "height": "10mm",
+    //             },
+    //         };
+
+    //         pdf.create(dataRender, options).toFile("report.pdf", async function (err, data) {
+    //             if (err) {
+    //                 res.send(err);
+    //             } else {
+
+    //                 let now = moment(); 
+    //                 await LogActivity.create({
+    //                     fk_username: req.user.username,
+    //                     activity_type: PRINT,
+    //                     activity_object: DOCUMENT,
+    //                     activity_object_detil: 'LAPORAN SPJ',
+    //                     activity_desc: `${req.user.username} ${PRINT} ${DOCUMENT} SPJ laporan pada ${now}`,
+    //                     activity_times: now,
+    //                 });
+
+    //                 res.download(data.filename);
+
+    //             }
+    //         });
+
+    //     } catch(error){
+    //         console.log(error);
+    //         res.status(500).json({
+    //             success: false,
+    //             message: 'maaf, terjadi kesalahan pada server'
+    //         });
+    //     }
+    // },
+
     makeReport: async (req, res) => {
         const {
             query : {
@@ -522,42 +624,44 @@ module.exports = {
         try {
             let {count: total, rows: data} = await Spj.findAndCountAll(filter);
 
-            let ejs = require("ejs");
-            let pdf = require("html-pdf");
-            let path = require("path");
+            let templateFile = "spj-template-report.pug"
+            let templatePath = path.resolve(__dirname,'../views/report/',templateFile);
+            let inputDir = path.resolve(templatePath, "..");
+            let inputFilenameNoExt = path.basename(templateFile, path.extname(templateFile));
+            let output = path.join(inputDir, inputFilenameNoExt + ".pdf");
+            let outputPath = path.resolve(output);
 
-            let dataRender = await ejs.renderFile(path.join(__dirname,'../views/report/','spj.ejs'),{data,total});
-            let options = {
-                "format": "A3",
-                "orientation": "landscape",
-                "paginationOffset": 1,
-                "header": {
-                    "height": "10mm",
-                },
-                "footer": {
-                    "height": "10mm",
-                },
+            var tempDir = inputDir;
+
+            let tempHTMLPath = path.join(tempDir, inputFilenameNoExt + "_temp.htm");
+
+            const puppeteerConfig = {
+                headless: true,
+                args: []
             };
 
-            pdf.create(dataRender, options).toFile("report.pdf", async function (err, data) {
-                if (err) {
-                    res.send(err);
-                } else {
+            const browser = await puppeteer.launch(puppeteerConfig);
+            const page = await browser.newPage();
+            page
+                .on("pageerror", function(err) {
+                    console.log("Page error: " + err.toString());
+                })
+                .on("error", function(err) {
+                    console.log("Error: " + err.toString());
+                });
 
-                    let now = moment(); 
-                    await LogActivity.create({
-                        fk_username: req.user.username,
-                        activity_type: PRINT,
-                        activity_object: DOCUMENT,
-                        activity_object_detil: 'LAPORAN SPJ',
-                        activity_desc: `${req.user.username} ${PRINT} ${DOCUMENT} SPJ laporan pada ${now}`,
-                        activity_times: now,
-                    });
-
-                    res.download(data.filename);
-
-                }
+            let pdfBuffer = await toPdf.masterDocumentToPDF(
+                    templatePath,page,tempHTMLPath,outputPath,                    
+                    data
+                );
+            
+            res.writeHead(200, {
+                'Content-Type': 'application/pdf',
+                'Content-Disposition': 'attachment; filename=report-spj.pdf',
+                'Content-Length': pdfBuffer.length
             });
+            res.end(pdfBuffer);
+
 
         } catch(error){
             console.log(error);
