@@ -1,0 +1,166 @@
+mixin date(input)
+    - var date = new Date(input)
+    - var months = [ 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December' ]
+
+    time(datetime=JSON.parse(JSON.stringify(date)))&attributes(attributes)=months[date.getMonth()] + ' ' + date.getDate() + ', ' + date.getFullYear()
+
+doctype html
+style.
+  html {
+    font-family: "Roboto", "Helvetica Neue", "sans-serif";
+  }
+  @page{
+      margin-top: 1cm;
+      margin-bottom: 1cm;
+      margin-left: 5px;
+      margin-right: 5px;
+  }
+  table {
+      width: 100%; 
+      border-collapse: collapse;
+      margin: auto; 
+      font-size: 14px;
+      color: #424242;
+      border-top: solid 1px #dddddd; 
+      border-bottom: solid 1px #dddddd;
+  }
+  th, td {
+      padding: 5px;
+  }
+  h2, h3, h4, h5 {
+    color:#424242;
+    text-align:center;
+  }
+  h3 {
+      padding-top: 25px;
+      padding-left: 10px; 
+      padding-right: 10px;
+      padding-bottom: 10px;
+  }
+  canvas {
+      max-width: 90%;
+      margin: auto;
+  }
+  div {
+      page-break-inside: avoid;
+  }
+  a {
+      color: #0097a7;
+      text-decoration: none;
+  }
+  h3 a {
+      color: #424242;
+      text-decoration: none;
+  }
+  p {
+    text-align: right; 
+    font-size: 14px; 
+    font-style: italic; 
+    color: #424242
+  }
+  .header {
+    margin-left: 5px;
+    height: 0px;
+  }
+  .logo {
+    height: 2.5cm;
+    width:auto;
+    position:absolute;
+    top: 10px;
+    left: 40px;
+  }
+
+head
+  meta(charset='UTF-8')
+  meta(name='viewport' content='width=device-width, initial-scale=1.0')
+  meta(http-equiv='X-UA-Compatible' content='ie=edge')
+  title Document Laporan Peminjaman
+.header
+  object.logo(data='./logo.png' type="image/png")
+  h2(style="margin-bottom:0;")
+    Laporan Peminjaman
+  h5(style="margin-top:2mm; margin-bottom:0;")
+    Badan Pendapatan, Pengelolaan Keuangan dan Aset Daerah
+  h5(style="margin-top:0; margin-bottom:1cm;")
+    Pemerintah Kabupaten Sampang
+  hr(style="color:#424242")
+
+script.
+  var data = !{data.replace(/<\//g, "<\\/")};
+  var tableContent = "";
+  var i = 0;
+  var contentLength = 0;
+  var index = 1;
+  var dataLength = data.length;
+  data.forEach(data => {
+  if(i === 0){
+  tableContent += '<br><br><br><br><br><br><br>';
+  tableContent += '<div style="page-break-before: auto;">';
+  //- tableContent += '<h3> <a href="https://sfsupport.dataon.com/app/partner-dashboard/dashboard">SPM</a></h3>';
+  tableContent += '<table>';
+  tableContent += '<tr style="border-bottom: solid 1px #dddddd;">'
+  tableContent += '<th align="left">No</th>';
+  tableContent += '<th align="left">ID Dokumen</th>';
+  tableContent += '<th align="left">Tanggal Peminjaman</th>';
+  tableContent += '<th align="left">Jadwal Pengembalian</th>';
+  tableContent += '<th align="left">Tanggal Pengembalian</th>';
+  tableContent += '<th align="left">Peminjam</th>';
+  tableContent += '<th align="left">Operator</th>';
+  tableContent += '<th align="left">Keperluan</th>';
+  tableContent += '</tr>';
+  tableContent += '<tr>';
+  tableContent += '<td align="left">' +index+ '</td>';
+  tableContent += '<td align="left"><a href="http://localhost:3000/detail/dokumen/'+data.fk_dok_id+'">' +data.fk_dok_id+'</a></td>';
+  tableContent += '<td align="left">' +data.date_pinjam+ '</td>';
+  tableContent += '<td align="left">' +data.date_hrs_kembali+ '</td>';
+  tableContent += '<td align="left">' +data.date_kembali+ '</td>';
+  tableContent += '<td align="left">' +data.peminjam+ '</td>';
+  tableContent += '<td align="left">' +data.fk_user_id+ '</td>';
+  tableContent += '<td align="left">' +data.log_desc+ '</td>';
+  tableContent += '</tr>';
+  contentLength++;
+  i++;
+  index++;
+  return;
+  }else if (i > 0 && i < 9){
+  tableContent += '<tr>';
+  tableContent += '<td align="left">' +index+ '</td>';
+  tableContent += '<td align="left"><a href="http://localhost:3000/detail/dokumen/'+data.fk_dok_id+'">' +data.fk_dok_id+'</a></td>';
+  tableContent += '<td align="left">' +data.date_pinjam+ '</td>';
+  tableContent += '<td align="left">' +data.date_hrs_kembali+ '</td>';
+  tableContent += '<td align="left">' +data.date_kembali+ '</td>';
+  tableContent += '<td align="left">' +data.peminjam+ '</td>';
+  tableContent += '<td align="left">' +data.fk_user_id+ '</td>';
+  tableContent += '<td align="left">' +data.log_desc+ '</td>';
+  tableContent += '</tr>';
+  contentLength++;
+  index++;
+  if (contentLength < dataLength) {
+    i++;
+  } else if (contentLength === dataLength) {
+  tableContent += '</table>';
+  i = 0;
+  tableContent += '<p>'+contentLength+' of '+dataLength+'</p>';
+  tableContent += '</div>';
+  }
+  return;
+  }else {
+  tableContent += '<tr>';
+  tableContent += '<td align="left">' +index+ '</td>';
+  tableContent += '<td align="left"><a href="http://localhost:3000/detail/dokumen/'+data.fk_dok_id+'">' +data.fk_dok_id+'</a></td>';
+  tableContent += '<td align="left">' +data.date_pinjam+ '</td>';
+  tableContent += '<td align="left">' +data.date_hrs_kembali+ '</td>';
+  tableContent += '<td align="left">' +data.date_kembali+ '</td>';
+  tableContent += '<td align="center">' +data.peminjam+ '</td>';
+  tableContent += '<td align="left">' +data.fk_user_id+ '</td>';
+  tableContent += '<td align="left">' +data.log_desc+ '</td>';
+  tableContent += '</tr>';
+  tableContent += '</table>';
+  contentLength++;
+  i = 0;
+  index++;
+  tableContent += '<p>'+contentLength+' of '+dataLength+'</p>';
+  tableContent += '</div>';
+  }
+  });
+  document.write(tableContent);
