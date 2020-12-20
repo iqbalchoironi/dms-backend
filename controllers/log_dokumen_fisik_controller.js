@@ -6,6 +6,9 @@ const { Op } = require('sequelize');
 const { sequelize } = require('../models');
 const { PRINT, REPORT, CREATE, LOAN, UPDATE, DELETE } = require('../helpers/logType');
 const moment = require('moment');
+const puppeteer = require("puppeteer");
+const toPdf = require('../helpers/toPdf');
+const path = require("path");
 
 module.exports = {
 
@@ -88,7 +91,7 @@ module.exports = {
             delete req.body.date_kembali;
         }
 
-        req.body.fk_user_id = req.user.user_id;
+        req.body.fk_user_id = req.user.username;
         req.body.date_pinjam = new moment.utc();
 
         let valiableSpm = await Spm.findOne({where:{dok_id: req.body.fk_dok_id}});
@@ -227,6 +230,102 @@ module.exports = {
         }
     },
 
+    // makeReport: async (req, res) => {
+    //     const {
+    //         query : {
+    //             fk_dok_id, 
+    //             date_pinjam, 
+    //             date_hrs_kembali, 
+    //             date_kembali,
+    //             peminjam,
+    //             fk_user_id,
+    //             log_desc,
+    //             // page,
+    //             // limit,
+    //         }
+    //     } = req;
+
+    //     let filter = {
+    //         raw: false,
+    //         // limit: parseInt(limit),
+    //         // offset: parseInt(limit) * (parseInt(page) - 1),
+    //         order: [],
+    //         where: {},
+    //     };
+
+    //     if (fk_dok_id) {
+    //         filter.where.fk_dok_id = { [Op.like]: `%${fk_dok_id}%` };
+    //     }
+    //     if (date_pinjam) {
+    //         filter.where.date_pinjam = {  [Op.between]: [new Date(date_pinjam), new Date(date_pinjam).setHours(24,0,0)] };
+    //     }
+    //     if (date_hrs_kembali) {
+    //         filter.where.date_hrs_kembali = {  [Op.between]: [new Date(date_hrs_kembali), new Date(date_hrs_kembali).setHours(24,0,0)] };
+    //     }
+    //     if (date_kembali) {
+    //         filter.where.date_kembali = {  [Op.between]: [new Date(date_kembali), new Date(date_kembali).setHours(24,0,0)] };
+    //     }
+    //     if (peminjam) {
+    //         filter.where.peminjam = { [Op.like]: `%${peminjam}%` };
+    //     }
+    //     if (fk_user_id) {
+    //         filter.where.fk_user_id = { [Op.like]: `%${fk_user_id}%` };
+    //     }
+    //     if (log_desc) {
+    //         filter.where.log_desc = { [Op.like]: `%${log_desc}%` };
+    //     }
+
+    //     try {
+    //         let {count: total, rows: data} = await LogDocumentPhisic.findAndCountAll(filter);
+    //         // let data = await Spj.findAll(filter);
+
+    //         let ejs = require("ejs");
+    //         let pdf = require("html-pdf");
+    //         let path = require("path");
+
+    //         let dataRender = await ejs.renderFile(path.join(__dirname,'../views/report/','peminjaman.ejs'),{data,total});
+    //         let options = {
+    //             "format": "A3",        // allowed units: A3, A4, A5, Legal, Letter, Tabloid
+    //             "orientation": "landscape",
+    //             "paginationOffset": 1,
+    //             // "directory": '/temp',
+    //             "header": {
+    //                 "height": "10mm",
+    //             },
+    //             "footer": {
+    //                 "height": "10mm",
+    //             },
+    //         };
+
+    //         pdf.create(dataRender, options).toFile("reportPeminjaman.pdf", async function (err, data) {
+    //             if (err) {
+    //                 res.send(err);
+    //             } else {
+
+    //                 let now = moment(); 
+    //                 await LogActivity.create({
+    //                     fk_username: req.user.username,
+    //                     activity_type: PRINT,
+    //                     activity_object: REPORT,
+    //                     activity_object_detil: `${PRINT} ${REPORT} ${LOAN}`,
+    //                     activity_desc: `${req.user.username} ${PRINT} ${REPORT} ${LOAN} pada ${now}`,
+    //                     activity_times: now,
+    //                 });
+
+    //                 res.download(data.filename);
+
+    //             }
+    //         });
+
+    //     } catch(error){
+    //         console.log(error);
+    //         res.status(500).json({
+    //             success: false,
+    //             message: 'maaf, terjadi kesalahan pada server'
+    //         });
+    //     }
+    // }
+
     makeReport: async (req, res) => {
         const {
             query : {
@@ -274,45 +373,44 @@ module.exports = {
 
         try {
             let {count: total, rows: data} = await LogDocumentPhisic.findAndCountAll(filter);
-            // let data = await Spj.findAll(filter);
+            
+            let templateFile = "peminjaman-template-report.pug"
+            let templatePath = path.resolve(__dirname,'../views/report/',templateFile);
+            let inputDir = path.resolve(templatePath, "..");
+            let inputFilenameNoExt = path.basename(templateFile, path.extname(templateFile));
+            let output = path.join(inputDir, inputFilenameNoExt + ".pdf");
+            let outputPath = path.resolve(output);
 
-            let ejs = require("ejs");
-            let pdf = require("html-pdf");
-            let path = require("path");
+            var tempDir = inputDir;
 
-            let dataRender = await ejs.renderFile(path.join(__dirname,'../views/report/','peminjaman.ejs'),{data,total});
-            let options = {
-                "format": "A3",        // allowed units: A3, A4, A5, Legal, Letter, Tabloid
-                "orientation": "landscape",
-                "paginationOffset": 1,
-                // "directory": '/temp',
-                "header": {
-                    "height": "10mm",
-                },
-                "footer": {
-                    "height": "10mm",
-                },
+            let tempHTMLPath = path.join(tempDir, inputFilenameNoExt + "_temp.htm");
+
+            const puppeteerConfig = {
+                headless: true,
+                args: []
             };
 
-            pdf.create(dataRender, options).toFile("reportPeminjaman.pdf", async function (err, data) {
-                if (err) {
-                    res.send(err);
-                } else {
+            const browser = await puppeteer.launch(puppeteerConfig);
+            const page = await browser.newPage();
+            page
+                .on("pageerror", function(err) {
+                    console.log("Page error: " + err.toString());
+                })
+                .on("error", function(err) {
+                    console.log("Error: " + err.toString());
+                });
 
-                    let now = moment(); 
-                    await LogActivity.create({
-                        fk_username: req.user.username,
-                        activity_type: PRINT,
-                        activity_object: REPORT,
-                        activity_object_detil: `${PRINT} ${REPORT} ${LOAN}`,
-                        activity_desc: `${req.user.username} ${PRINT} ${REPORT} ${LOAN} pada ${now}`,
-                        activity_times: now,
-                    });
-
-                    res.download(data.filename);
-
-                }
+            let pdfBuffer = await toPdf.masterDocumentToPDF(
+                    templatePath,page,tempHTMLPath,outputPath,                    
+                    data
+                );
+            
+            res.writeHead(200, {
+                'Content-Type': 'application/pdf',
+                'Content-Disposition': 'attachment; filename=report-spj.pdf',
+                'Content-Length': pdfBuffer.length
             });
+            res.end(pdfBuffer);
 
         } catch(error){
             console.log(error);
