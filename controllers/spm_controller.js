@@ -7,7 +7,10 @@ const {sequelize} = require('../models')
 const setId = require('../helpers/setIdDocument');
 const { CREATE, UPDATE, DELETE, PRINT, DOCUMENT } = require('../helpers/logType');
 const xlsx = require('xlsx');
-const moment = require('moment')
+const moment = require('moment');
+const puppeteer = require("puppeteer");
+const toPdf = require('../helpers/toPdf');
+const path = require("path");
 
 module.exports = {
     
@@ -486,6 +489,8 @@ module.exports = {
         }
     },
 
+    // 
+    
     makeReport: async (req, res) => {
         const {
             query : {
@@ -546,45 +551,44 @@ module.exports = {
 
         try {
             let {count: total, rows: data} = await Spm.findAndCountAll(filter);
-            // let data = await Spj.findAll(filter);
+            
+            let templateFile = "spm-template-report.pug"
+            let templatePath = path.resolve(__dirname,'../views/report/',templateFile);
+            let inputDir = path.resolve(templatePath, "..");
+            let inputFilenameNoExt = path.basename(templateFile, path.extname(templateFile));
+            let output = path.join(inputDir, inputFilenameNoExt + ".pdf");
+            let outputPath = path.resolve(output);
 
-            let ejs = require("ejs");
-            let pdf = require("html-pdf");
-            let path = require("path");
+            var tempDir = inputDir;
 
-            let dataRender = await ejs.renderFile(path.join(__dirname,'../views/report/','spm.ejs'),{data,total});
-            let options = {
-                "format": "A3",        // allowed units: A3, A4, A5, Legal, Letter, Tabloid
-                "orientation": "landscape",
-                "paginationOffset": 1,
-                // "directory": '/temp',
-                "header": {
-                    "height": "10mm",
-                },
-                "footer": {
-                    "height": "10mm",
-                },
+            let tempHTMLPath = path.join(tempDir, inputFilenameNoExt + "_temp.htm");
+
+            const puppeteerConfig = {
+                headless: true,
+                args: []
             };
 
-            pdf.create(dataRender, options).toFile("report.pdf", async function (err, data) {
-                if (err) {
-                    res.send(err);
-                } else {
+            const browser = await puppeteer.launch(puppeteerConfig);
+            const page = await browser.newPage();
+            page
+                .on("pageerror", function(err) {
+                    console.log("Page error: " + err.toString());
+                })
+                .on("error", function(err) {
+                    console.log("Error: " + err.toString());
+                });
 
-                    let now = moment(); 
-                    await LogActivity.create({
-                        fk_username: req.user.username,
-                        activity_type: PRINT,
-                        activity_object: DOCUMENT,
-                        activity_object_detil: 'LAPORAN SPM',
-                        activity_desc: `${req.user.username} ${PRINT} ${DOCUMENT} SPM laporan pada ${now}`,
-                        activity_times: now,
-                    });
-
-                    res.download(data.filename);
-
-                }
+            let pdfBuffer = await toPdf.masterDocumentToPDF(
+                    templatePath,page,tempHTMLPath,outputPath,                    
+                    data
+                );
+            
+            res.writeHead(200, {
+                'Content-Type': 'application/pdf',
+                'Content-Disposition': 'attachment; filename=report-spm.pdf',
+                'Content-Length': pdfBuffer.length
             });
+            res.end(pdfBuffer);
 
         } catch(error){
             console.log(error);
