@@ -58,7 +58,13 @@ module.exports = {
             filter.where.keperluan = { [Op.like]: `%${keperluan}%` };
         }
         if (tgl_spm) {
-            filter.where.tgl_spm = { [Op.like]: `%${tgl_spm}%` };
+            if(tgl_spm.length === 4) {
+                filter.where.tgl_spm = sequelize.where(sequelize.fn('YEAR', sequelize.col('tgl_spm')), tgl_spm);
+            } else if (tgl_spm.length === 2){
+                filter.where.tgl_spm = sequelize.where(sequelize.fn('MONTH', sequelize.col('tgl_spm')), tgl_spm);
+            } else {
+                filter.where.tgl_spm = {  [Op.between]: [new Date(tgl_spm), new Date(tgl_spm).setHours(24,0,0)] };
+            }
         }
         if (no_spm) {
             filter.where.no_spm = { [Op.like]: `%${no_spm}%` };

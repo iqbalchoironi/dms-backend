@@ -43,13 +43,32 @@ module.exports = {
             filter.where.fk_dok_id = { [Op.like]: `%${fk_dok_id}%` };
         }
         if (date_pinjam) {
-            filter.where.date_pinjam = {  [Op.between]: [new Date(date_pinjam), new Date(date_pinjam).setHours(24,0,0)] };
+            if(date_pinjam.length === 4) {
+                filter.where.date_pinjam = sequelize.where(sequelize.fn('YEAR', sequelize.col('date_pinjam')), date_pinjam);
+            } else if (date_pinjam.length === 2){
+                filter.where.date_pinjam = sequelize.where(sequelize.fn('MONTH', sequelize.col('date_pinjam')), date_pinjam);
+            } else {
+                filter.where.date_pinjam = {  [Op.between]: [new Date(date_pinjam), new Date(date_pinjam).setHours(24,0,0)] };
+            }
         }
         if (date_hrs_kembali) {
-            filter.where.date_hrs_kembali = {  [Op.between]: [new Date(date_hrs_kembali), new Date(date_hrs_kembali).setHours(24,0,0)] };
+            if(date_hrs_kembali.length === 4) {
+                filter.where.date_hrs_kembali = sequelize.where(sequelize.fn('YEAR', sequelize.col('date_hrs_kembali')), date_hrs_kembali);
+            } else if (date_hrs_kembali.length === 2){
+                filter.where.date_hrs_kembali =sequelize.where(sequelize.fn('MONTH', sequelize.col('date_hrs_kembali')), date_hrs_kembali);
+                
+            } else {
+                filter.where.date_hrs_kembali = {  [Op.between]: [new Date(date_hrs_kembali), new Date(date_hrs_kembali).setHours(24,0,0)] };
+            }
         }
         if (date_kembali) {
-            filter.where.date_kembali = {  [Op.between]: [new Date(date_kembali), new Date(date_kembali).setHours(24,0,0)] };
+            if(date_kembali.length === 4) {
+                filter.where.date_kembali = sequelize.where(sequelize.fn('YEAR', sequelize.col('date_kembali')), date_kembali);
+            } else if (date_kembali.length === 2){
+                filter.where.date_kembali = sequelize.where(sequelize.fn('MONTH', sequelize.col('date_kembali')), date_kembali);
+            } else {
+                filter.where.date_kembali = {  [Op.between]: [new Date(date_kembali), new Date(date_kembali).setHours(24,0,0)] };
+            }
         }
         if (peminjam) {
             filter.where.peminjam = { [Op.like]: `%${peminjam}%` };
