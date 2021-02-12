@@ -13,6 +13,9 @@ server.use(express.urlencoded({limit: '50mb'}));
 server.use(express.static("public"));
 
 //setup routes
+server.get('/', (req, res) => {
+    res.send('oke udah jalan sob!!!!');
+})
 require('./routes')(server);
 
 
