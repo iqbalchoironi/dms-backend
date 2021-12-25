@@ -422,8 +422,6 @@ module.exports = {
             });
 
             rows.shift();
-            rows.shift();
-            rows.shift();
 
             let CatSpm = await Category.findOne({
                 where:{ id: 'spm'}
@@ -455,18 +453,6 @@ module.exports = {
 
                     let newSpm = Spm.create(input,{raw: true},{transaction:t});
                     promises.push(newSpm);
-
-                    let now = moment(); 
-                    let LogActivityNew = LogActivity.create({
-                        fk_username: req.user.username,
-                        activity_type: CREATE,
-                        activity_object: DOCUMENT,
-                        activity_object_detil: `SPM_${dokIdIndex}`,
-                        activity_desc: `${req.user.username} ${CREATE} ${DOCUMENT} ${newSpm.dok_id} pada ${now}`,
-                        activity_times: now,
-                        'pending':true
-                    },{raw: true},{transaction:t});
-                    promises.push(LogActivityNew);
                 });
 
                 let newCount = Category.update(
@@ -479,6 +465,16 @@ module.exports = {
                 promises.push(newCount);
 
                 return Promise.all(promises);
+            });
+
+            let now = moment(); 
+            await LogActivity.create({
+                fk_username: req.user.username,
+                activity_type: 'IMPORT DARI EXEL',
+                activity_object: DOCUMENT,
+                activity_object_detil: `SPM_IMPORT_FROM_EXEL`,
+                activity_desc: `${req.user.username} import exel ${DOCUMENT} pada ${now}`,
+                activity_times: now,
             });
 
             res.status(200).json({

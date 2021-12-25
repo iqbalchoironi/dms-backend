@@ -401,8 +401,6 @@ module.exports = {
             });
 
             rows.shift();
-            rows.shift();
-            rows.shift();
 
             let CatSpj = await Category.findOne({
                 where:{ id: 'spj'}
@@ -431,18 +429,6 @@ module.exports = {
                     };
                     let newSpj = Spj.create(input,{raw: true},{transaction:t});
                     promises.push(newSpj);
-
-                    let now = moment(); 
-                    let LogActivityNew = LogActivity.create({
-                        fk_username: req.user.username,
-                        activity_type: CREATE,
-                        activity_object: DOCUMENT,
-                        activity_object_detil: `SPJ_${dokIdIndex}`,
-                        activity_desc: `${req.user.username} ${CREATE} ${DOCUMENT} ${newSpj.dok_id} pada ${now}`,
-                        activity_times: now,
-                        'pending':true
-                    },{raw: true},{transaction:t});
-                    promises.push(LogActivityNew);
                 });
 
                 let newCount = Category.update(
@@ -457,6 +443,17 @@ module.exports = {
                 return Promise.all(promises);
 
             });
+
+            let now = moment(); 
+            await LogActivity.create({
+                fk_username: req.user.username,
+                activity_type: 'IMPORT DARI EXEL',
+                activity_object: DOCUMENT,
+                activity_object_detil: `SPJ_IMPORT_FROM_EXEL`,
+                activity_desc: `${req.user.username} import exel ${DOCUMENT} pada ${now}`,
+                activity_times: now
+            });
+
 
             res.status(200).json({
                 success: true,
